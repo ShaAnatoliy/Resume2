@@ -60,15 +60,15 @@ namespace Task01
 			}
 		}
 
-		public static String GetCount()
+		public static string GetCount()
 		{
-			String retMsg = "";
+			string retMsg = "";
 			try
 			{
 				rwLock.AcquireReaderLock(10);
 				try
 				{
-					retMsg = "Чтение. Значение ресурса: " + count.ToString();
+					retMsg = "Read. Value: " + count.ToString();
 				}
 				finally
 				{
@@ -82,9 +82,9 @@ namespace Task01
 			return retMsg;
 		}
 
-		public static String AddToCount(int value)
+		public static string AddToCount(int value)
 		{
-			String retMsg = "";
+			string retMsg = "";
 			try
 			{
 				rwLock.AcquireWriterLock(100);
@@ -92,7 +92,7 @@ namespace Task01
 				{
 					// It's safe for this thread to access from the shared resource.
 					count = value;
-					retMsg = "Значение записанное в ресурс: " + count.ToString();
+					retMsg = "Write. Value: " + count.ToString();
 				}
 				finally
 				{

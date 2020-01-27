@@ -64,6 +64,8 @@ namespace Task01
 				return;
 			}
 
+			// TODO: Из "ReqMatch.Value" вытащить параметр val: /setvalue?val=Int
+
 			// Получаем строку запроса
 			string RequestUri = ReqMatch.Groups[1].Value;
 
@@ -79,15 +81,33 @@ namespace Task01
 				return;
 			}
 
+			if (RequestUri.ToLower().Equals("/favicon.ico"))
+			{
+				SendError(Client, 404);
+				return;
+			}
+
+			string Html = "<!DOCTYPE html>";
+			string Head = "<head><meta charset=\"utf-8\" /><title>Test</title></head>";
+
 			// Если строка запроса оканчивается на "/", то добавим к ней index.html
 			if (RequestUri.EndsWith("/"))
 			{
-				RequestUri += "index.html";
+				Html = $"<html>{Head}<body><p>{HTTPServer.GetCount()}</p></body></html>";
+			}
+			else if (RequestUri.ToLower().Equals("/setvalue"))
+			{
+				// "/index.php?name=Катя&surname=Иванова"
+				// "/setvalue?val=12"
+
+				Html = $"<html>{Head}<body><p>{HTTPServer.AddToCount(12)}</p></body></html>";
+			} 
+			else
+			{
+				SendError(Client, 404);
+				return;
 			}
 
-			// Код простой HTML-странички
-			string Html = "<html><body><h1>It works!</h1></body></html>";
-			
 			// Необходимые заголовки: ответ сервера, тип и длина содержимого. После двух пустых строк - само содержимое
 			string Str = "HTTP/1.1 200 OK\nContent-type: text/html\nContent-Length:" + Html.Length.ToString() + "\n\n" + Html;
 			// Приведем строку к виду массива байт
