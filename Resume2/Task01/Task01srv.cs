@@ -11,9 +11,9 @@ namespace Task01
 	{
 		static TcpListener Listener = null;
 
-		public static readonly ReaderWriterLock rwLock = new ReaderWriterLock();
+		static readonly ReaderWriterLock rwLock = new ReaderWriterLock();
 
-		public static int count = 0; // Общий ресурс, защищенный ReaderWriterLock.
+		static int count = 0; // Общий ресурс, защищенный ReaderWriterLock.
 
 		static void ClientThread(Object StateInfo)
 		{
