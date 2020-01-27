@@ -6,21 +6,27 @@ using System.Text;
 
 namespace Task01
 {
-	static class Server
+	static class HTTPServer
 	{
-		static readonly TcpListener Listener = new TcpListener(IPAddress.Any, 8081);
+		static TcpListener Listener = null;
 
 		static void Main(string[] args)
 		{
+			IPAddress localAddr = IPAddress.Parse("127.0.0.1");
+
 			try
 			{
+				Listener = new TcpListener(localAddr, 8081);
+
 				if (Listener != null)
 				{
 					Listener.Start();
+					Console.WriteLine($"http://{localAddr.ToString()}:8081");
 					while (true)
 					{
-						// Принимаем новых клиентов
-						Listener.AcceptTcpClient();
+						//  Принимаем новых клиентов и передаем их на обработку новому экземпляру класса Client
+						new Client(Listener.AcceptTcpClient());
+
 					}
 				}
 
