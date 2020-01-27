@@ -11,6 +11,8 @@ namespace Task01
 	{
 		public Client(TcpClient Client)
 		{
+			// ++HTTPServer.count;
+
 			// Код простой HTML-странички
 			string Html = "<html><body><h1>It works!</h1></body></html>";
 			// Необходимые заголовки: ответ сервера, тип и длина содержимого. После двух пустых строк - само содержимое

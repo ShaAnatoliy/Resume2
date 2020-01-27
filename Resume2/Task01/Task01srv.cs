@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 
 namespace Task01
 {
@@ -10,8 +11,26 @@ namespace Task01
 	{
 		static TcpListener Listener = null;
 
+		public static readonly ReaderWriterLock rwLock = new ReaderWriterLock();
+
+		public static int count = 0; // Общий ресурс, защищенный ReaderWriterLock.
+
+		static void ClientThread(Object StateInfo)
+		{
+			// Создаем новый экземпляр класса Client и передаем ему приведенный к классу TcpClient объект StateInfo
+			new Client((TcpClient)StateInfo);
+		}
+
 		static void Main(string[] args)
 		{
+			// Определим нужное максимальное количество потоков
+			// Пусть будет по 4 на каждый процессор
+			int MaxThreadsCount = Environment.ProcessorCount * 4;
+			// Установим максимальное количество рабочих потоков
+			ThreadPool.SetMaxThreads(MaxThreadsCount, MaxThreadsCount);
+			// Установим минимальное количество рабочих потоков
+			ThreadPool.SetMinThreads(2, 2);
+
 			IPAddress localAddr = IPAddress.Parse("127.0.0.1");
 
 			try
@@ -24,8 +43,9 @@ namespace Task01
 					Console.WriteLine($"http://{localAddr.ToString()}:8081");
 					while (true)
 					{
-						//  Принимаем новых клиентов и передаем их на обработку новому экземпляру класса Client
-						new Client(Listener.AcceptTcpClient());
+						// Принимаем новых клиентов. После того, как клиент был принят, он передается в новый поток (ClientThread)
+						// с использованием пула потоков.
+						ThreadPool.QueueUserWorkItem(new WaitCallback(ClientThread), Listener.AcceptTcpClient());
 
 					}
 				}
@@ -38,6 +58,52 @@ namespace Task01
 				else
 					Console.WriteLine("Ошибка запуска (Listener)..");
 			}
+		}
+
+		public static String GetCount()
+		{
+			String retMsg = "";
+			try
+			{
+				rwLock.AcquireReaderLock(10);
+				try
+				{
+					retMsg = "Чтение. Значение ресурса: " + count.ToString();
+				}
+				finally
+				{
+					rwLock.ReleaseReaderLock();
+				}
+			}
+			catch (ApplicationException)
+			{
+				retMsg = "Err: Reader time-outs";
+			}
+			return retMsg;
+		}
+
+		public static String AddToCount(int value)
+		{
+			String retMsg = "";
+			try
+			{
+				rwLock.AcquireWriterLock(100);
+				try
+				{
+					// It's safe for this thread to access from the shared resource.
+					count = value;
+					retMsg = "Значение записанное в ресурс: " + count.ToString();
+				}
+				finally
+				{
+					rwLock.ReleaseWriterLock();
+				}
+			}
+			catch (ApplicationException)
+			{
+				retMsg = "Err: Writer time-outs";
+			}
+			return retMsg;
 		}
 	}
 }
